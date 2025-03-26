@@ -1,0 +1,76 @@
+import random
+import os
+
+prenume = ["Ana", "Ion", "Maria", "Vasile", "Elena", "Mihai"]
+nume_familie = ["Popescu", "Ionescu", "Georgescu", "Dumitrescu"]
+
+def genereaza_csv():
+    try:
+        fisier = open("date.csv", "w")
+        fisier.write("CNP,Nume\n")
+        for i in range(1000000):
+            sex = random.randint(1, 2)
+            an = random.randint(70, 99)
+            luna = random.randint(1, 12)
+            if luna < 10:
+                luna = "0" + str(luna)
+            else:
+                luna = str(luna)
+            zi = random.randint(1, 28)
+            if zi < 10:
+                zi = "0" + str(zi)
+            else:
+                zi = str(zi)
+            judet = random.randint(1, 46)
+            if judet < 10:
+                judet = "0" + str(judet)
+            else:
+                judet = str(judet)
+            numar = random.randint(1, 999)
+            if numar < 10:
+                numar = "00" + str(numar)
+            elif numar < 100:
+                numar = "0" + str(numar)
+            else:
+                numar = str(numar)
+            cnp = str(sex) + str(an) + luna + zi + judet + numar + "1"
+            nume_complet = random.choice(prenume) + " " + random.choice(nume_familie)
+            fisier.write(cnp + "," + nume_complet + "\n")
+        fisier.close()
+        if os.path.exists("date.csv"):
+            print("Fișierul date.csv a fost creat cu succes!")
+        else:
+            print("Eroare: Fișierul nu a fost creat!")
+    except Exception as e:
+        print("A apărut o eroare la generarea fișierului:", e)
+
+def cauta_cnp(cnp_cautat):
+    try:
+        fisier = open("date.csv", "r")
+        linii = fisier.readlines()
+        gasit = False
+        for linie in linii[1:]:
+            cnp, nume = linie.strip().split(",")
+            if cnp == cnp_cautat:
+                print("CNP găsit! Numele este:", nume)
+                gasit = True
+                break
+        if not gasit:
+            print("CNP-ul nu a fost găsit!")
+        fisier.close()
+    except FileNotFoundError:
+        print("Eroare: Fișierul date.csv nu există! Generează-l mai întâi.")
+    except Exception as e:
+        print("A apărut o eroare la căutare:", e)
+
+genereaza_csv()
+
+print("Bine ai venit la programul de căutare CNP!")
+while True:
+    print("Introdu un CNP pentru a-l căuta sau tastează 'iesire' pentru a opri programul:")
+    raspuns = input("CNP: ")
+    if raspuns == "iesire":
+        print("Programul s-a încheiat!")
+        break
+    else:
+        cauta_cnp(raspuns)
