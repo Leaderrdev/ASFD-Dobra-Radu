@@ -1,0 +1,70 @@
+import hashlib
+
+def get_hash(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+litere_mari = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+cifre = "0123456789"
+caractere_speciale = "!@#$"
+litere_mici = "abcdefghijklmnopqrstuvwxyz"
+
+apeluri_recursive = 0
+parola_hash_fix = "0e000d61c1735636f56154f30046be93b3d71f1abbac3cd9e3f80093fdb357ad"
+
+def backtracking(parola_curenta, nr_litere_mari, nr_cifre, nr_speciale, nr_litere_mici, parola_hash):
+    global apeluri_recursive
+    apeluri_recursive += 1
+
+    if len(parola_curenta) == 6:
+        if nr_litere_mari == 1 and nr_cifre == 1 and nr_speciale == 1 and nr_litere_mici == 3:
+            hash_curent = get_hash(parola_curenta)
+            if hash_curent == parola_hash:
+                print("Parola găsită:", parola_curenta)
+                print("Număr apeluri recursive:", apeluri_recursive)
+                return True
+        return False
+
+    if nr_litere_mari < 1:
+        for litera in litere_mari:
+            if backtracking(parola_curenta + litera, nr_litere_mari + 1, nr_cifre, nr_speciale, nr_litere_mici, parola_hash):
+                return True
+
+    if nr_cifre < 1:
+        for cifra in cifre:
+            if backtracking(parola_curenta + cifra, nr_litere_mari, nr_cifre + 1, nr_speciale, nr_litere_mici, parola_hash):
+                return True
+
+    if nr_speciale < 1:
+        for special in caractere_speciale:
+            if backtracking(parola_curenta + special, nr_litere_mari, nr_cifre, nr_speciale + 1, nr_litere_mici, parola_hash):
+                return True
+
+    if nr_litere_mici < 3:
+        for litera in litere_mici:
+            if backtracking(parola_curenta + litera, nr_litere_mari, nr_cifre, nr_speciale, nr_litere_mici + 1, parola_hash):
+                return True
+
+    return False
+
+print("Ce vrei să faci?")
+print("1. Caută parola pentru hash-ul fix: 0e000d61c1735636f56154f30046be93b3d71f1abbac3cd9e3f80093fdb357ad")
+print("2. Introdu propria parolă pentru a fi 'spartă'")
+alegere = input("Alege (1 sau 2): ")
+
+if alegere == "1":
+    print("Începem căutarea parolei pentru hash-ul fix...")
+    apeluri_recursive = 0
+    backtracking("", 0, 0, 0, 0, parola_hash_fix)
+elif alegere == "2":
+    print("Introdu parola de 6 caractere pe care vrei să o spargem (ex. aB!1bc):")
+    parola_introdusa = input("Parola: ")
+    if len(parola_introdusa) != 6:
+        print("Parola trebuie să aibă exact 6 caractere!")
+    else:
+        parola_hash = get_hash(parola_introdusa)
+        print("Hash-ul parolei tale este:", parola_hash)
+        print("Începem căutarea parolei...")
+        apeluri_recursive = 0
+        backtracking("", 0, 0, 0, 0, parola_hash)
+else:
+    print("Alegere invalidă!")
