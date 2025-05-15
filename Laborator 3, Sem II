@@ -1,0 +1,86 @@
+import json
+
+date = {
+    "bancnote": [
+        {"valoare": 50, "stoc": 20},
+        {"valoare": 20, "stoc": 30},
+        {"valoare": 10, "stoc": 40},
+        {"valoare": 5, "stoc": 50},
+        {"valoare": 1, "stoc": 100}
+    ],
+    "cumparaturi": [
+        {"nume": "Lapte", "pret": 7},
+        {"nume": "Paine", "pret": 3},
+        {"nume": "Ciocolata", "pret": 5},
+        {"nume": "Apa", "pret": 2},
+        {"nume": "Cafea", "pret": 9}
+    ]
+}
+
+plati_clienti = [
+    {"nume": "Lapte", "suma_platita": 10},    
+    {"nume": "Paine", "suma_platita": 5},     
+    {"nume": "Ciocolata", "suma_platita": 20},
+    {"nume": "Apa", "suma_platita": 10},      
+    {"nume": "Cafea", "suma_platita": 10}     
+]
+
+bancnote = [(item["valoare"], item["stoc"]) for item in date["bancnote"]]
+valori = [val for val, stoc in bancnote]
+stocuri = {val: stoc for val, stoc in bancnote}
+
+produse = {item["nume"]: item["pret"] for item in date["cumparaturi"]}
+
+def calculeaza_rest_dp(rest, valori, stocuri):
+    if rest == 0:
+        return True, {}
+    
+    dp = [float('inf')] * (rest + 1)
+    dp[0] = 0
+    folosite = [[] for _ in range(rest + 1)]
+
+    for suma in range(1, rest + 1):
+        for val in valori:
+            if suma >= val and dp[suma - val] != float('inf'):
+                if dp[suma - val] + 1 < dp[suma]:
+                    dp[suma] = dp[suma - val] + 1
+                    folosite[suma] = folosite[suma - val] + [val]
+
+    if dp[rest] == float('inf'):
+        return False, {}
+
+    numar_bancnote = {}
+    for val in folosite[rest]:
+        numar_bancnote[val] = numar_bancnote.get(val, 0) + 1
+    
+    for val, numar in numar_bancnote.items():
+        if numar > stocuri[val]:
+            return False, {}
+    
+    for val, numar in numar_bancnote.items():
+        stocuri[val] -= numar
+    
+    return True, numar_bancnote
+
+for client in plati_clienti:
+    nume_produs = client["nume"]
+    suma_platita = client["suma_platita"]
+    pret = produse[nume_produs]
+    
+    rest = suma_platita - pret
+    if rest < 0:
+        print(f"Client care cumpără {nume_produs}: Plătit {suma_platita}, Preț {pret}, Fonduri insuficiente, Rest = 0")
+        continue
+    
+    succes, bancnote_folosite = calculeaza_rest_dp(rest, valori, stocuri)
+    
+    if not succes:
+        print(f"Client care cumpără {nume_produs}: Plătit {suma_platita}, Preț {pret}, Nu se poate oferi rest pentru Rest = {rest}")
+        break
+    
+    print(f"Client care cumpără {nume_produs}:")
+    print(f"  Produs cumpărat: {nume_produs}")
+    print(f"  Suma plătită: {suma_platita}")
+    print(f"  Rest (în minim de bancnote): {rest}")
+    print(f"  Bancnote folosite: {bancnote_folosite}")
+    print()
