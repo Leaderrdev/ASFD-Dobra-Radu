@@ -1,70 +1,96 @@
 import hashlib
+import string
+import time
+
 
 def get_hash(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-litere_mari = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-cifre = "0123456789"
-caractere_speciale = "!@#$"
-litere_mici = "abcdefghijklmnopqrstuvwxyz"
 
-apeluri_recursive = 0
-parola_hash_fix = "0e000d61c1735636f56154f30046be93b3d71f1abbac3cd9e3f80093fdb357ad"
+class PasswordCracker:
+    def __init__(self, target_hash):
+        self.target_hash = target_hash
+        self.password_length = 6
+        self.uppercase_letters = list(string.ascii_uppercase)  # A-Z
+        self.lowercase_letters = list(string.ascii_lowercase)  # a-z
+        self.digits = list(string.digits)  # 0-9
+        self.special_chars = ['!', '@', '#', '$']
+        self.recursive_calls = 0
+        self.solution_found = False
+        self.solution = None
 
-def backtracking(parola_curenta, nr_litere_mari, nr_cifre, nr_speciale, nr_litere_mici, parola_hash):
-    global apeluri_recursive
-    apeluri_recursive += 1
+    def backtrack(self, current_password, uppercase_count, lowercase_count, digit_count, special_count):
 
-    if len(parola_curenta) == 6:
-        if nr_litere_mari == 1 and nr_cifre == 1 and nr_speciale == 1 and nr_litere_mici == 3:
-            hash_curent = get_hash(parola_curenta)
-            if hash_curent == parola_hash:
-                print("Parola găsită:", parola_curenta)
-                print("Număr apeluri recursive:", apeluri_recursive)
-                return True
-        return False
+        self.recursive_calls += 1
 
-    if nr_litere_mari < 1:
-        for litera in litere_mari:
-            if backtracking(parola_curenta + litera, nr_litere_mari + 1, nr_cifre, nr_speciale, nr_litere_mici, parola_hash):
-                return True
 
-    if nr_cifre < 1:
-        for cifra in cifre:
-            if backtracking(parola_curenta + cifra, nr_litere_mari, nr_cifre + 1, nr_speciale, nr_litere_mici, parola_hash):
-                return True
+        if self.solution_found:
+            return
 
-    if nr_speciale < 1:
-        for special in caractere_speciale:
-            if backtracking(parola_curenta + special, nr_litere_mari, nr_cifre, nr_speciale + 1, nr_litere_mici, parola_hash):
-                return True
 
-    if nr_litere_mici < 3:
-        for litera in litere_mici:
-            if backtracking(parola_curenta + litera, nr_litere_mari, nr_cifre, nr_speciale, nr_litere_mici + 1, parola_hash):
-                return True
+        if len(current_password) == self.password_length:
 
-    return False
+            if (uppercase_count == 1 and lowercase_count == 3 and
+                    digit_count == 1 and special_count == 1):
 
-print("Ce vrei să faci?")
-print("1. Caută parola pentru hash-ul fix: 0e000d61c1735636f56154f30046be93b3d71f1abbac3cd9e3f80093fdb357ad")
-print("2. Introdu propria parolă pentru a fi 'spartă'")
-alegere = input("Alege (1 sau 2): ")
+                password_str = ''.join(current_password)
+                if get_hash(password_str) == self.target_hash:
+                    self.solution_found = True
+                    self.solution = password_str
+            return
 
-if alegere == "1":
-    print("Începem căutarea parolei pentru hash-ul fix...")
-    apeluri_recursive = 0
-    backtracking("", 0, 0, 0, 0, parola_hash_fix)
-elif alegere == "2":
-    print("Introdu parola de 6 caractere pe care vrei să o spargem (ex. aB!1bc):")
-    parola_introdusa = input("Parola: ")
-    if len(parola_introdusa) != 6:
-        print("Parola trebuie să aibă exact 6 caractere!")
-    else:
-        parola_hash = get_hash(parola_introdusa)
-        print("Hash-ul parolei tale este:", parola_hash)
-        print("Începem căutarea parolei...")
-        apeluri_recursive = 0
-        backtracking("", 0, 0, 0, 0, parola_hash)
-else:
-    print("Alegere invalidă!")
+
+        if uppercase_count < 1:
+            for char in self.uppercase_letters:
+                current_password.append(char)
+                self.backtrack(current_password, uppercase_count + 1, lowercase_count, digit_count, special_count)
+                if self.solution_found:
+                    return
+                current_password.pop()
+
+        # Try adding a lowercase letter
+        if lowercase_count < 3:
+            for char in self.lowercase_letters:
+                current_password.append(char)
+                self.backtrack(current_password, uppercase_count, lowercase_count + 1, digit_count, special_count)
+                if self.solution_found:
+                    return
+                current_password.pop()
+
+
+        if digit_count < 1:
+            for char in self.digits:
+                current_password.append(char)
+                self.backtrack(current_password, uppercase_count, lowercase_count, digit_count + 1, special_count)
+                if self.solution_found:
+                    return
+                current_password.pop()
+
+
+        if special_count < 1:
+            for char in self.special_chars:
+                current_password.append(char)
+                self.backtrack(current_password, uppercase_count, lowercase_count, digit_count, special_count + 1)
+                if self.solution_found:
+                    return
+                current_password.pop()
+
+    def find_password(self):
+        start_time = time.time()
+        self.backtrack([], 0, 0, 0, 0)
+        end_time = time.time()
+
+        if self.solution_found:
+            print(f"Parola găsită: {self.solution}")
+            print(f"Număr apeluri recursive: {self.recursive_calls}")
+            print(f"Timp de execuție: {end_time - start_time:.2f} secunde")
+        else:
+            print("Parola nu a fost găsită.")
+
+
+
+target_hash = "0e000d61c1735636f56154f30046be93b3d71f1abbac3cd9e3f80093fdb357ad"
+
+
+cracker = PasswordCracker(target_hash)
+cracker.find_password()
