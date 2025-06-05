@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Inventar Elegant</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f9fafb; font-family: 'Segoe UI', sans-serif; }
+    .container { margin-top: 40px; }
+    .card { border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.05);}
+    .btn-custom { width: 100%; border-radius: 10px; }
+    .table thead { background-color: #0d6efd; color: white; }
+    .form-control { border-radius: 10px; }
+    tr.selected { background-color: #cfe2ff !important; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2 class="mb-4 text-primary fw-bold">📦 Gestionare Inventar</h2>
+
+  <div class="card p-4 mb-5">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <button id="addBtn" class="btn btn-success btn-custom">➕ Adăugare</button>
+      </div>
+      <div class="col-md-3">
+        <button id="editBtn" class="btn btn-warning btn-custom" disabled>✏️ Editare</button>
+      </div>
+      <div class="col-md-3">
+        <button id="deleteBtn" class="btn btn-danger btn-custom" disabled>🗑️ Ștergere</button>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-4">
+      <div class="col-md-6">
+        <label class="form-label">ID produs:</label>
+        <input type="text" id="idProdus" class="form-control" placeholder="ex: 001">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Nume produs:</label>
+        <input type="text" id="numeProdus" class="form-control" placeholder="ex: Lapte">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Cantitate:</label>
+        <input type="number" id="cantitate" class="form-control" placeholder="ex: 12">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Preț (RON):</label>
+        <input type="text" id="pret" class="form-control" placeholder="ex: 10">
+      </div>
+    </div>
+  </div>
+
+  <table class="table table-hover text-center align-middle" id="tabelProduse">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Produs</th>
+        <th>Cantitate</th>
+        <th>Preț (RON)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Se populează din JS -->
+    </tbody>
+  </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Variabile globale
+let produse = [];
+let selectedRow = null;
+
+// Elemente
+const tabel = document.getElementById('tabelProduse').getElementsByTagName('tbody')[0];
+const idInput = document.getElementById('idProdus');
+const numeInput = document.getElementById('numeProdus');
+const cantitateInput = document.getElementById('cantitate');
+const pretInput = document.getElementById('pret');
+const addBtn = document.getElementById('addBtn');
+const editBtn = document.getElementById('editBtn');
+const deleteBtn = document.getElementById('deleteBtn');
+
+// Încarcă produsele din JSON la inițializare
+fetch('/static/data.json')
+  .then(r => r.json())
+  .then(data => {
+    produse = data;
+    renderTable();
+  })
+  .catch(e => alert("Nu s-a putut încărca fișierul JSON!"));
+
+function renderTable() {
+  tabel.innerHTML = '';
+  produse.forEach((produs, idx) => {
+    const row = tabel.insertRow();
+    row.innerHTML = `
+      <td>${produs.id}</td>
+      <td>${produs.nume}</td>
+      <td>${produs.cantitate}</td>
+      <td>${produs.pret}</td>
+    `;
+    row.onclick = () => selectRow(row, idx);
+    if (selectedRow === idx) row.classList.add('selected');
+  });
+  deselect();
+}
+
+function selectRow(row, idx) {
+  Array.from(tabel.rows).forEach(r => r.classList.remove('selected'));
+  row.classList.add('selected');
+  selectedRow = idx;
+  editBtn.disabled = false;
+  deleteBtn.disabled = false;
+  const produs = produse[idx];
+  idInput.value = produs.id;
+  numeInput.value = produs.nume;
+  cantitateInput.value = produs.cantitate;
+  pretInput.value = produs.pret;
+}
+
+function deselect() {
+  selectedRow = null;
+  editBtn.disabled = true;
+  deleteBtn.disabled = true;
+  idInput.value = '';
+  numeInput.value = '';
+  cantitateInput.value = '';
+  pretInput.value = '';
+}
+
+addBtn.onclick = function() {
+  const id = idInput.value.trim();
+  const nume = numeInput.value.trim();
+  const cantitate = cantitateInput.value.trim();
+  const pret = pretInput.value.trim();
+
+  if (!id || !nume || !cantitate || !pret) {
+    alert("Completează toate câmpurile!");
+    return;
+  }
+  if (produse.some(p => String(p.id) === id)) {
+    alert("ID deja existent!");
+    return;
+  }
+  produse.push({
+    id: id,
+    nume: nume,
+    cantitate: Number(cantitate),
+    pret: Number(pret)
+  });
+  renderTable();
+};
+
+editBtn.onclick = function() {
+  if (selectedRow === null) return;
+  const id = idInput.value.trim();
+  const nume = numeInput.value.trim();
+  const cantitate = cantitateInput.value.trim();
+  const pret = pretInput.value.trim();
+  if (!id || !nume || !cantitate || !pret) {
+    alert("Completează toate câmpurile!");
+    return;
+  }
+  produse[selectedRow] = {
+    id: id,
+    nume: nume,
+    cantitate: Number(cantitate),
+    pret: Number(pret)
+  };
+  renderTable();
+};
+
+deleteBtn.onclick = function() {
+  if (selectedRow === null) return;
+  if (confirm("Sigur ștergi produsul selectat?")) {
+    produse.splice(selectedRow, 1);
+    renderTable();
+  }
+};
+
+document.body.addEventListener('click', function(e) {
+  if (!e.target.closest('tr') && !e.target.closest('.form-control') && !e.target.closest('button')) {
+    Array.from(tabel.rows).forEach(r => r.classList.remove('selected'));
+    deselect();
+  }
+});
+</script>
+</body>
+</html>

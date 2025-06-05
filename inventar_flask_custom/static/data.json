@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "nume": "Lapte",
+        "cantitate": 12,
+        "pret": 10
+    },
+    {
+        "id": 2,
+        "nume": "Zahar",
+        "cantitate": 5,
+        "pret": 7
+    },
+    {
+        "id": 31,
+        "nume": "Apa plata",
+        "cantitate": 31,
+        "pret": 31
+    }
+]
